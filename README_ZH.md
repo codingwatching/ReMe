@@ -57,6 +57,15 @@ graph TB
 
 [ReMeFb](reme/reme_fb.py) 是基于文件的记忆系统的核心类，就像一个**智能秘书**，帮你管理所有记忆相关的事务：
 
+``` file structure
+.reme/
+├── MEMORY.md
+└── memory/
+    ├── 2025-02-12.md
+    ├── 2025-02-13.md
+    └── ...
+```
+
 | 方法              | 功能           | 关键组件                                                                                                                                                                                                                 |
 |-----------------|--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `start`         | 🚀 启动记忆系统    | [BaseFileStore](reme/core/file_store/base_file_store.py)（本地数据库）、[BaseFileWatcher](reme/core/file_watcher/base_file_watcher.py)（文件监控）、[BaseEmbeddingModel](reme/core/embedding/base_embedding_model.py)（Embedding 缓存） |
@@ -92,8 +101,6 @@ FbSummarizer 配备了一套文件操作工具，让 AI 能够直接操作记忆
 | `read`  | 读取文件内容 | 查看现有记忆，避免重复  |
 | `write` | 覆盖写入文件 | 创建新记忆文件或大幅重构 |
 | `edit`  | 编辑文件局部 | 追加新内容或修改特定部分 |
-| `ls`    | 列出目录内容 | 查看有哪些记忆文件    |
-| `bash`  | 执行命令   | 创建目录等操作      |
 
 ## 上下文压缩
 
@@ -141,6 +148,154 @@ M --> R[Top-N 结果]
 ---
 
 ## ReMeCli：基于 File Based Memory 的终端助手
+
+ReMeCli 是一个终端 AI 聊天助手，内置记忆管理能力。它干了两件事来解决上下文窗口有限的问题：
+
+| 能力        | 干嘛用的                      |
+|-----------|---------------------------|
+| **上下文压缩** | 对话太长时，把旧内容自动浓缩成摘要，给新内容腾地方 |
+| **长期记忆**  | 重要信息落盘保存，下次对话自动搜出来用       |
+
+### ReMeCli 的能力
+
+#### 什么时候会写记忆？
+
+| 场景               | 写到哪                    | 怎么触发                 |
+|------------------|------------------------|----------------------|
+| 上下文超长自动压缩        | `memory/YYYY-MM-DD.md` | 后台自动                 |
+| 用户执行 `/compact`  | `memory/YYYY-MM-DD.md` | 手动压缩 + 后台保存          |
+| 用户执行 `/new`      | `memory/YYYY-MM-DD.md` | 新对话 + 后台保存           |
+| 用户说"记住这个"        | `MEMORY.md` 或日志        | Agent 用 `write` 工具写入 |
+| Agent 发现了重要决策/偏好 | `MEMORY.md`            | Agent 主动写            |
+
+#### 记忆检索
+
+两种方式找回之前的东西：
+
+| 方式   | 工具              | 什么时候用      | 举例                       |
+|------|-----------------|------------|--------------------------|
+| 语义搜索 | `memory_search` | 不确定记在哪，模糊找 | "之前关于部署的讨论"              |
+| 直接读  | `read`          | 知道是哪天、哪个文件 | 读 `memory/2025-02-13.md` |
+
+搜索用的是**向量 + BM25 混合检索**（向量权重 0.7，BM25 权重 0.3），自然语言和精确关键词都能搜到。
+
+#### 内置工具
+
+| 工具              | 干什么      | 细节                                     |
+|-----------------|----------|----------------------------------------|
+| `memory_search` | 搜记忆      | MEMORY.md 和 memory/*.md 里做向量+BM25 混合检索 |
+| `bash`          | 跑命令      | 执行 bash 命令，有超时和输出截断                    |
+| `ls`            | 看目录      | 列目录结构                                  |
+| `read`          | 读文件      | 文本和图片都行，支持分段读                          |
+| `edit`          | 改文件      | 精确匹配文本后替换                              |
+| `write`         | 写文件      | 创建或覆盖，自动建目录                            |
+| `execute_code`  | 跑 Python | 运行代码片段                                 |
+| `web_search`    | 联网搜索     | 通过 Tavily 或 DashScope 搜                |
+
+## 快速开始
+
+### 安装
+
+```bash
+pip install reme-ai --pre
+```
+
+### 环境变量配置
+
+API 密钥通过环境变量设置，可以写在项目根目录的 `.env` 里：
+
+| 环境变量                      | 说明                   | 示例                                                  |
+|---------------------------|----------------------|-----------------------------------------------------|
+| `REME_LLM_API_KEY`        | LLM 的 API Key        | `sk-xxx`                                            |
+| `REME_LLM_BASE_URL`       | LLM 的 Base URL       | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
+| `REME_EMBEDDING_API_KEY`  | Embedding 的 API Key  | `sk-xxx`                                            |
+| `REME_EMBEDDING_BASE_URL` | Embedding 的 Base URL | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
+
+> 没有 embedding 服务的话搜索效果会打折扣，记得同时设 `vector_enabled=false`。
+
+**联网搜索（可选）**
+
+| 环境变量                | 说明                 |
+|---------------------|--------------------|
+| `TAVILY_API_KEY`    | Tavily 搜索 API Key  |
+| `DASHSCOPE_API_KEY` | 百炼 LLM（带搜索）API Key |
+
+> 二选一就行，有 Tavily 优先用 Tavily。
+
+### import 使用
+
+```python
+import asyncio
+from reme import ReMeFb
+
+async def main():
+    # 初始化并启动
+    reme = ReMeFb(working_dir=".reme")
+    await reme.start()
+
+    messages = [
+        {"role": "user", "content": "我喜欢用 Python 3.12"},
+        {"role": "assistant", "content": "好的，已记录你偏好 Python 3.12"},
+    ]
+
+    # 检查上下文是否超限
+    result = await reme.context_check(messages)
+    print(f"需要压缩: {result['needs_compaction']}")
+
+    # 压缩对话为摘要
+    summary = await reme.compact(messages_to_summarize=messages)
+    print(f"摘要: {summary}")
+
+    # 将重要记忆写入文件（ReAct Agent 自动操作）
+    await reme.summary(messages=messages, date="2025-02-28")
+
+    # 语义搜索记忆
+    results = await reme.memory_search(query="Python 版本偏好", max_results=5)
+    print(f"搜索结果: {results}")
+
+    # 读取指定记忆文件
+    content = await reme.memory_get(path="MEMORY.md")
+    print(f"记忆内容: {content}")
+
+    # 关闭（保存 Embedding 缓存、停止文件监控）
+    await reme.close()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### 启动
+
+```bash
+remecli config=cli
+```
+
+启动后自动加载 [cli.yaml](reme/config/cli.yaml)，然后就可以直接聊了。ReMe 在后台自动处理压缩和记忆。
+
+### 系统命令
+
+对话里输入 `/` 开头的命令控制状态：
+
+| 命令         | 说明                  | 需要等 |
+|------------|---------------------|-----|
+| `/compact` | 手动压缩当前对话，同时后台存到长期记忆 | 是   |
+| `/new`     | 开始新对话，历史后台保存到长期记忆   | 否   |
+| `/clear`   | 清空一切，**不保存**        | 否   |
+| `/history` | 看当前对话里未压缩的消息        | 否   |
+| `/help`    | 看命令列表               | 否   |
+| `/exit`    | 退出                  | 否   |
+
+**三个命令的区别**
+
+| 命令         | 压缩摘要  | 长期记忆 | 消息历史  |
+|------------|-------|------|-------|
+| `/compact` | 生成新摘要 | 保存   | 保留最近的 |
+| `/new`     | 清空    | 保存   | 清空    |
+| `/clear`   | 清空    | 不保存  | 清空    |
+
+> `/clear` 是真删，删了就没了，不会存到任何地方。
+
+---
 
 # Vector Based Memory System
 
