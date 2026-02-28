@@ -20,13 +20,19 @@
   <strong>A memory management toolkit for AI agents — Remember Me, Refine Me.</strong><br>
 </p>
 
+> For legacy versions, see [0.2.x Documentation](docs/README_0_2_x.md)
+
 ---
 
-🧠 ReMe is a **memory management framework** built for **AI agents**, offering both **file-based** and **vector-based** memory systems.
+🧠 ReMe is a **memory management framework** built for **AI agents**, offering both **file-based** and **vector-based**
+memory systems.
 
-It addresses two core problems of agent memory: **limited context windows** (early information gets truncated or lost in long conversations) and **stateless sessions** (new conversations cannot inherit history and always start from scratch).
+It addresses two core problems of agent memory: **limited context windows** (early information gets truncated or lost
+during
+long conversations) and **stateless sessions** (new conversations cannot inherit history and always start from scratch).
 
-ReMe gives agents **real memory** — old conversations are automatically condensed, important information is persisted, and the next conversation can recall it automatically.
+ReMe gives agents **real memory** — old conversations are automatically condensed, important information is persisted,
+and the next conversation can recall it automatically.
 
 ---
 
@@ -36,57 +42,59 @@ ReMe gives agents **real memory** — old conversations are automatically conden
 
 Treat **memory as files** — readable, editable, and portable.
 
-| Traditional Memory Systems | File-Based ReMe |
-|---------------------------|-----------------|
-| 🗄️ Database storage       | 📝 Markdown files |
-| 🔒 Opaque                 | 👀 Read anytime   |
-| ❌ Hard to modify         | ✏️ Edit directly  |
-| 🚫 Hard to migrate        | 📦 Copy to migrate |
+| Traditional Memory Systems | File-Based ReMe    |
+|----------------------------|--------------------|
+| 🗄️ Database storage       | 📝 Markdown files  |
+| 🔒 Opaque                  | 👀 Read anytime    |
+| ❌ Hard to modify           | ✏️ Edit directly   |
+| 🚫 Hard to migrate         | 📦 Copy to migrate |
 
 ```
 .reme/
 ├── MEMORY.md          # Long-term memory: user preferences, project config, etc.
 └── memory/
-    └── YYYY-MM-DD.md  # Daily logs: work records for the day, written on compact
+    └── YYYY-MM-DD.md  # Daily logs: work records for the day, written upon compact
 ```
 
 ### Core Capabilities
 
-[ReMe File Based](reme/reme_fb.py) is the core class of the file-based memory system. It acts like an **intelligent secretary**, managing all memory-related operations:
+[ReMe File Based](reme/reme_fb.py) is the core class of the file-based memory system. It acts like an **intelligent
+secretary**, managing all memory-related operations:
 
-| Method            | Function              | Key Components                                                                                                                                                                                                                             |
-|-------------------|-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `start`           | 🚀 Start memory system | [BaseFileStore](reme/core/file_store/base_file_store.py) (local file store)<br/>[BaseFileWatcher](reme/core/file_watcher/base_file_watcher.py) (file watcher)<br/>[BaseEmbeddingModel](reme/core/embedding/base_embedding_model.py) (embedding cache) |
-| `close`           | 📕 Close and save      | Close file store, stop file watcher, save embedding cache                                                                                                                                                                                   |
-| `context_check`   | 📏 Check context limit | [ContextChecker](reme/memory/file_based/fb_context_checker.py)                                                                                                                                                                             |
-| `compact`         | 📦 Compact history to summary | [Compactor](reme/memory/file_based/fb_compactor.py)                                                                                                                                                                                  |
-| `summary`         | 📝 Write important memory to files | [Summarizer](reme/memory/file_based/fb_summarizer.py)                                                                                                                                                                               |
-| `memory_search`   | 🔍 Semantic memory search | [MemorySearch](reme/memory/tools/chunk/memory_search.py)                                                                                                                                                                            |
-| `memory_get`      | 📖 Read specified memory file | [MemoryGet](reme/memory/tools/chunk/memory_get.py)                                                                                                                                                                                   |
+| Method          | Function                           | Key Components                                                                                                                                                                                                                                          |
+|-----------------|------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `start`         | 🚀 Start memory system             | [BaseFileStore](reme/core/file_store/base_file_store.py) (local file storage)<br/>[BaseFileWatcher](reme/core/file_watcher/base_file_watcher.py) (file watcher)<br/>[BaseEmbeddingModel](reme/core/embedding/base_embedding_model.py) (embedding cache) |
+| `close`         | 📕 Close and save                  | Close file store, stop file watcher, save embedding cache                                                                                                                                                                                               |
+| `context_check` | 📏 Check context limit             | [ContextChecker](reme/memory/file_based/fb_context_checker.py)                                                                                                                                                                                          |
+| `compact`       | 📦 Compact history to summary      | [Compactor](reme/memory/file_based/fb_compactor.py)                                                                                                                                                                                                     |
+| `summary`       | 📝 Write important memory to files | [Summarizer](reme/memory/file_based/fb_summarizer.py)                                                                                                                                                                                                   |
+| `memory_search` | 🔍 Semantic memory search          | [MemorySearch](reme/memory/tools/chunk/memory_search.py)                                                                                                                                                                                                |
+| `memory_get`    | 📖 Read specified memory file      | [MemoryGet](reme/memory/tools/chunk/memory_get.py)                                                                                                                                                                                                      |
 
 ---
 
 ## 🗃️ Vector-Based ReMe
 
-[ReMe Vector Based](reme/reme.py) is the core class for the vector-based memory system, supporting unified management of three memory types:
+[ReMe Vector Based](reme/reme.py) is the core class for the vector-based memory system, supporting unified management of
+three memory types:
 
-| Memory Type           | Purpose                          | Usage Context  |
-|-----------------------|----------------------------------|----------------|
-| **Personal memory**   | User preferences, habits         | `user_name`    |
-| **Task / procedural memory** | Task execution experience, success/failure patterns | `task_name` |
-| **Tool memory**       | Tool usage experience, parameter tuning | `tool_name` |
+| Memory Type                  | Purpose                                             | Usage Context |
+|------------------------------|-----------------------------------------------------|---------------|
+| **Personal memory**          | User preferences, habits                            | `user_name`   |
+| **Task / procedural memory** | Task execution experience, success/failure patterns | `task_name`   |
+| **Tool memory**              | Tool usage experience, parameter tuning             | `tool_name`   |
 
 ### Core Capabilities
 
-| Method               | Function       | Description                          |
-|----------------------|----------------|--------------------------------------|
-| `summarize_memory`   | 🧠 Summarize memory | Automatically extract and store memory from conversations |
-| `retrieve_memory`    | 🔍 Retrieve memory | Retrieve relevant memory by query    |
-| `add_memory`         | ➕ Add memory  | Manually add memory to vector store  |
-| `get_memory`         | 📖 Get memory  | Fetch a single memory by ID          |
-| `update_memory`      | ✏️ Update memory | Update content or metadata of existing memory |
-| `delete_memory`      | 🗑️ Delete memory | Delete specified memory              |
-| `list_memory`        | 📋 List memory | List memories with filtering and sorting |
+| Method             | Function            | Description                                               |
+|--------------------|---------------------|-----------------------------------------------------------|
+| `summarize_memory` | 🧠 Summarize memory | Automatically extract and store memory from conversations |
+| `retrieve_memory`  | 🔍 Retrieve memory  | Retrieve relevant memory by query                         |
+| `add_memory`       | ➕ Add memory        | Manually add memory to vector store                       |
+| `get_memory`       | 📖 Get memory       | Fetch a single memory by ID                               |
+| `update_memory`    | ✏️ Update memory    | Update content or metadata of existing memory             |
+| `delete_memory`    | 🗑️ Delete memory   | Delete specified memory                                   |
+| `list_memory`      | 📋 List memory      | List memories with filtering and sorting                  |
 
 ---
 
@@ -98,7 +106,7 @@ Treat **memory as files** — readable, editable, and portable.
       <strong>May<br>You<br>Prosper</strong>
     </td>
     <td width="80%" style="border: none;">
-      <video src="https://github.com/user-attachments/assets/befa7e40-63ba-4db2-8251-516024616e00" autoplay muted loop controls></video>
+      <video src="https://github.com/user-attachments/assets/d731ae5c-80eb-498b-a22c-8ab2b9169f87" autoplay muted loop controls></video>
     </td>
     <td width="10%" style="border: none; vertical-align: middle; text-align: center;">
       <strong>Success<br>at<br>Hand</strong>
@@ -108,35 +116,37 @@ Treat **memory as files** — readable, editable, and portable.
 
 ### When Is Memory Written?
 
-| Scenario                    | Written to                 | Trigger                          |
-|----------------------------|----------------------------|----------------------------------|
-| Auto-compact when context is too long | `memory/YYYY-MM-DD.md`     | Automatic in background          |
-| User runs `/compact`       | `memory/YYYY-MM-DD.md`     | Manual compact + background save |
-| User runs `/new`           | `memory/YYYY-MM-DD.md`     | New conversation + background save |
-| User says "remember this"  | `MEMORY.md` or log         | Agent writes via `write` tool    |
-| Agent finds important decisions/preferences | `MEMORY.md`            | Agent writes proactively         |
+| Scenario                                    | Written to             | Trigger                            |
+|---------------------------------------------|------------------------|------------------------------------|
+| Auto-compact when context is too long       | `memory/YYYY-MM-DD.md` | Automatic in background            |
+| User runs `/compact`                        | `memory/YYYY-MM-DD.md` | Manual compact + background save   |
+| User runs `/new`                            | `memory/YYYY-MM-DD.md` | New conversation + background save |
+| User says "remember this"                   | `MEMORY.md` or log     | Agent writes via `write` tool      |
+| Agent finds important decisions/preferences | `MEMORY.md`            | Agent writes proactively           |
 
 ### Memory Retrieval Tools
 
-| Method       | Tool             | When to use              | Example                          |
-|-------------|------------------|--------------------------|----------------------------------|
-| Semantic search | `memory_search`  | Unsure where it is, fuzzy lookup | "Earlier discussion about deployment" |
-| Direct read | `read`           | Know the date or file    | Read `memory/2025-02-13.md`      |
+| Method          | Tool            | When to use                      | Example                               |
+|-----------------|-----------------|----------------------------------|---------------------------------------|
+| Semantic search | `memory_search` | Unsure where it is, fuzzy lookup | "Earlier discussion about deployment" |
+| Direct read     | `read`          | Know the date or file            | Read `memory/2025-02-13.md`           |
 
-Search uses **vector + BM25 hybrid retrieval** (vector weight 0.7, BM25 weight 0.3), so both natural language and exact keywords can match.
+Search uses **vector + BM25 hybrid retrieval** (vector weight 0.7, BM25 weight 0.3), so queries using both natural
+language and exact
+keywords can match.
 
 ### Built-in Tools
 
-| Tool             | Function     | Details                                                |
-|------------------|-------------|--------------------------------------------------------|
-| `memory_search`  | Search memory | Vector + BM25 hybrid search over MEMORY.md and memory/*.md |
-| `bash`           | Run commands | Execute bash commands with timeout and output truncation |
-| `ls`             | List directory | Show directory structure                              |
-| `read`           | Read file   | Text and images supported, with segmented reading      |
-| `edit`           | Edit file   | Replace after exact text match                         |
-| `write`          | Write file  | Create or overwrite, auto-create directories           |
-| `execute_code`   | Run Python  | Execute code snippets                                  |
-| `web_search`     | Web search  | Search via Tavily or DashScope                        |
+| Tool            | Function       | Details                                                    |
+|-----------------|----------------|------------------------------------------------------------|
+| `memory_search` | Search memory  | Vector + BM25 hybrid search over MEMORY.md and memory/*.md |
+| `bash`          | Run commands   | Execute bash commands with timeout and output truncation   |
+| `ls`            | List directory | Show directory structure                                   |
+| `read`          | Read file      | Text and images supported, with segmented reading          |
+| `edit`          | Edit file      | Replace after exact text match                             |
+| `write`         | Write file     | Create or overwrite, auto-create directories               |
+| `execute_code`  | Run Python     | Execute code snippets                                      |
+| `web_search`    | Web search     | Search via Tavily                                          |
 
 ---
 
@@ -152,13 +162,13 @@ pip install -U reme-ai
 
 API keys are set via environment variables; you can put them in a `.env` file in the project root:
 
-| Variable                   | Description              | Example                                                  |
-|---------------------------|--------------------------|----------------------------------------------------------|
-| `REME_LLM_API_KEY`        | LLM API key              | `sk-xxx`                                                 |
-| `REME_LLM_BASE_URL`       | LLM base URL             | `https://dashscope.aliyuncs.com/compatible-mode/v1`      |
-| `REME_EMBEDDING_API_KEY`  | Embedding API key        | `sk-xxx`                                                 |
-| `REME_EMBEDDING_BASE_URL` | Embedding base URL      | `https://dashscope.aliyuncs.com/compatible-mode/v1`      |
-| `TAVILY_API_KEY`          | Tavily search API key (optional) | `tvly-xxx`                                       |
+| Variable                  | Description                      | Example                                             |
+|---------------------------|----------------------------------|-----------------------------------------------------|
+| `REME_LLM_API_KEY`        | LLM API key                      | `sk-xxx`                                            |
+| `REME_LLM_BASE_URL`       | LLM base URL                     | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
+| `REME_EMBEDDING_API_KEY`  | Embedding API key                | `sk-xxx`                                            |
+| `REME_EMBEDDING_BASE_URL` | Embedding base URL               | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
+| `TAVILY_API_KEY`          | Tavily search API key (optional) | `tvly-xxx`                                          |
 
 ### Using ReMeCli
 
@@ -174,22 +184,22 @@ remecli config=cli
 
 Commands starting with `/` control session state:
 
-| Command     | Description                                      | Waits for response |
-|------------|---------------------------------------------------|--------------------|
+| Command    | Description                                                        | Waits for response |
+|------------|--------------------------------------------------------------------|--------------------|
 | `/compact` | Manually compact current conversation and save to long-term memory | Yes                |
-| `/new`     | Start new conversation; history saved to long-term memory | No          |
-| `/clear`   | Clear everything, **without saving**              | No                 |
-| `/history` | View uncompressed messages in current conversation | No                |
-| `/help`    | Show command list                                | No                 |
-| `/exit`    | Exit                                             | No                 |
+| `/new`     | Start new conversation; history saved to long-term memory          | No                 |
+| `/clear`   | Clear everything, **without saving**                               | No                 |
+| `/history` | View uncompressed messages in current conversation                 | No                 |
+| `/help`    | Show command list                                                  | No                 |
+| `/exit`    | Exit                                                               | No                 |
 
 **Difference between the three commands**
 
-| Command     | Compact summary | Long-term memory | Message history   |
-|------------|-----------------|------------------|-------------------|
-| `/compact` | New summary     | Saved            | Keep recent       |
-| `/new`     | Cleared         | Saved            | Cleared           |
-| `/clear`   | Cleared         | Not saved        | Cleared           |
+| Command    | Compact summary | Long-term memory | Message history |
+|------------|-----------------|------------------|-----------------|
+| `/compact` | New summary     | Saved            | Keep recent     |
+| `/new`     | Cleared         | Saved            | Cleared         |
+| `/clear`   | Cleared         | Not saved        | Cleared         |
 
 > `/clear` permanently deletes; nothing is persisted anywhere.
 
@@ -260,6 +270,7 @@ if __name__ == "__main__":
 ```python
 import asyncio
 from reme import ReMe
+
 
 async def main():
     # Initialize ReMe
@@ -341,6 +352,7 @@ async def main():
 
     await reme.close()
 
+
 if __name__ == "__main__":
     asyncio.run(main())
 ```
@@ -371,7 +383,8 @@ graph TB
 
 #### Memory Summary: ReAct + File Tools
 
-[Summarizer](reme/memory/file_based/fb_summarizer.py) is the core component for memory summarization. It uses the **ReAct + file tools** pattern.
+[Summarizer](reme/memory/file_based/fb_summarizer.py) is the core component for memory summarization. It uses the
+**ReAct + file tools** pattern.
 
 ```mermaid
 graph LR
@@ -388,15 +401,16 @@ graph LR
 
 Summarizer is equipped with file operation tools so the AI can work directly on memory files:
 
-| Tool     | Function       | Use case                    |
-|----------|----------------|-----------------------------|
-| `read`   | Read file content | View existing memory, avoid duplicates |
-| `write`  | Overwrite file | Create new memory file or major rewrite |
-| `edit`   | Edit part of file | Append or modify specific sections   |
+| Tool    | Function          | Use case                                |
+|---------|-------------------|-----------------------------------------|
+| `read`  | Read file content | View existing memory, avoid duplicates  |
+| `write` | Overwrite file    | Create new memory file or major rewrite |
+| `edit`  | Edit part of file | Append or modify specific sections      |
 
 #### Context Compaction
 
-When a conversation gets too long, [Compactor](reme/memory/file_based/fb_compactor.py) compresses history into a concise summary — like **meeting minutes**, turning long discussion into key points.
+When a conversation gets too long, [Compactor](reme/memory/file_based/fb_compactor.py) compresses history into a concise
+summary — like **meeting minutes**, turning long discussion into key points.
 
 ```mermaid
 graph LR
@@ -408,24 +422,26 @@ D --> E
 
 The compact summary includes what’s needed to continue:
 
-| Content   | Description                          |
-|-----------|--------------------------------------|
-| 🎯 Goals   | What the user wants to accomplish    |
-| ⚙️ Constraints | Requirements and preferences mentioned |
-| 📈 Progress | Completed / in progress / blocked tasks |
-| 🔑 Decisions | Decisions made and reasons           |
-| 📌 Context  | Key data such as file paths, function names |
+| Content        | Description                                 |
+|----------------|---------------------------------------------|
+| 🎯 Goals       | What the user wants to accomplish           |
+| ⚙️ Constraints | Requirements and preferences mentioned      |
+| 📈 Progress    | Completed / in progress / blocked tasks     |
+| 🔑 Decisions   | Decisions made and reasons                  |
+| 📌 Context     | Key data such as file paths, function names |
 
 #### Memory Retrieval
 
-[MemorySearch](reme/memory/tools/chunk/memory_search.py) provides **vector + BM25 hybrid retrieval**. The two methods complement each other:
+[MemorySearch](reme/memory/tools/chunk/memory_search.py) provides **vector + BM25 hybrid retrieval**. The two methods
+complement each other:
 
-| Retrieval      | Strength                         | Weakness                    |
-|----------------|----------------------------------|-----------------------------|
-| **Vector semantic** | Captures similar meaning with different wording | Weaker on exact token match |
-| **BM25 full-text** | Strong exact token match         | No synonym or paraphrase understanding |
+| Retrieval           | Strength                                        | Weakness                               |
+|---------------------|-------------------------------------------------|----------------------------------------|
+| **Vector semantic** | Captures similar meaning with different wording | Weaker on exact token match            |
+| **BM25 full-text**  | Strong exact token match                        | No synonym or paraphrase understanding |
 
-**Fusion**: Both retrieval paths are used; results are combined by weighted sum (vector 0.7 + BM25 0.3), so both natural-language queries and exact lookups get reliable results.
+**Fusion**: Both retrieval paths are used; results are combined by weighted sum (vector 0.7 + BM25 0.3), so both
+natural-language queries and exact lookups get reliable results.
 
 ```mermaid
 graph LR
@@ -464,11 +480,15 @@ graph TB
 
 ## ⭐ Community & Support
 
-- **Star & Watch**: Star helps more agent developers discover ReMe; Watch keeps you updated on new releases and features.
-- **Share your work**: In Issues or Discussions, share what ReMe unlocks for your agents — we’re happy to highlight great community examples.
+- **Star & Watch**: Star helps more agent developers discover ReMe; Watch keeps you updated on new releases and
+  features.
+- **Share your work**: In Issues or Discussions, share what ReMe unlocks for your agents — we’re happy to highlight
+  great community examples.
 - **Need a new feature?** Open a Feature Request; we’ll iterate with the community.
-- **Code contributions**: All forms of code contribution are welcome. See the [Contribution Guide](docs/contribution.md).
-- **Acknowledgments**: Thanks to OpenClaw, Mem0, MemU, CoPaw, and other open-source projects for inspiration and support.
+- **Code contributions**: All forms of code contribution are welcome. See
+  the [Contribution Guide](docs/contribution.md).
+- **Acknowledgments**: Thanks to OpenClaw, Mem0, MemU, CoPaw, and other open-source projects for inspiration and
+  support.
 
 ---
 
