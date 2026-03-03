@@ -35,6 +35,8 @@ class ReMeCopaw(Application):
         language: str = "zh",
         vector_weight: float = 0.7,
         candidate_multiplier: float = 3.0,
+        tool_result_threshold: int = 1000,
+        retention_days: int = 7,
     ):
 
         self.working_path = Path(working_dir).absolute()
@@ -57,6 +59,8 @@ class ReMeCopaw(Application):
 
         self.vector_weight: float = vector_weight
         self.candidate_multiplier: float = candidate_multiplier
+        self.tool_result_threshold: int = tool_result_threshold
+        self.retention_days: int = retention_days
 
         self.update_params(
             max_input_length=max_input_length,
@@ -178,18 +182,44 @@ class ReMeCopaw(Application):
             embedding_max_batch_size,
         )
 
+    def _cleanup_tool_results(self) -> int:
+        """Clean up expired tool result files."""
+        try:
+            compactor = ToolResultCompactor(
+                tool_result_dir=self.tool_result_path,
+                tool_result_threshold=self.tool_result_threshold,
+                retention_days=self.retention_days,
+            )
+            return compactor.cleanup_expired_files()
+        except Exception as e:
+            logger.exception(f"Error cleaning up tool results: {e}")
+            return 0
+
+    async def start(self):
+        """Start the application and clean up expired tool result files."""
+        result = await super().start()
+        self._cleanup_tool_results()
+        return result
+
+    async def close(self) -> bool:
+        """Close the application and clean up expired tool result files."""
+        self._cleanup_tool_results()
+        return await super().close()
+
     async def compact_tool_result(
         self,
         messages: list[Msg],
-        tool_result_threshold: int = 10000,
-        retention_days: int = 7,
+        tool_result_threshold: int | None = None,
+        retention_days: int | None = None,
     ) -> list[Msg]:
         """Compact tool results by truncating large outputs and saving full content to files."""
         try:
             compactor = ToolResultCompactor(
                 tool_result_dir=self.tool_result_path,
-                tool_result_threshold=tool_result_threshold,
-                retention_days=retention_days,
+                tool_result_threshold=(
+                    tool_result_threshold if tool_result_threshold is not None else self.tool_result_threshold
+                ),
+                retention_days=retention_days if retention_days is not None else self.retention_days,
             )
             compactor.context["messages"] = messages
 
