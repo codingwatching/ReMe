@@ -177,6 +177,8 @@ Use it as context to maintain continuity.
                     total_tokens = 0
                     text_parts = []
                     for block in content:
+                        if not isinstance(block, dict):
+                            continue
                         block_type = block.get("type", "unknown")
                         block_tokens, block_str = _get_block_tokens(
                             block,

@@ -65,6 +65,8 @@ def _extract_text_from_messages(messages: list[dict]) -> str:
     - Simple string content: {"role": "user", "content": "hello"}
     - List content with text blocks:
       {"role": "user", "content": [{"type": "text", "text": "hello"}]}
+    - List content with tool_result blocks:
+      {"role": "user", "content": [{"type": "tool_result", "output": "..."}]}
 
     Args:
         messages: List of message dictionaries in chat format.
@@ -80,10 +82,21 @@ def _extract_text_from_messages(messages: list[dict]) -> str:
         elif isinstance(content, list):
             for block in content:
                 if isinstance(block, dict):
-                    # Support {"type": "text", "text": "..."} format
-                    text = block.get("text") or block.get("content", "")
-                    if text:
-                        parts.append(str(text))
+                    block_type = block.get("type", "")
+                    if block_type == "tool_result":
+                        output = block.get("output", "")
+                        if isinstance(output, str) and output:
+                            parts.append(output)
+                        elif isinstance(output, list):
+                            for sub in output:
+                                if isinstance(sub, dict):
+                                    sub_text = sub.get("text") or sub.get("content", "")
+                                    if sub_text:
+                                        parts.append(str(sub_text))
+                    else:
+                        text = block.get("text") or block.get("content", "")
+                        if text:
+                            parts.append(str(text))
                 elif isinstance(block, str):
                     parts.append(block)
     return "\n".join(parts)

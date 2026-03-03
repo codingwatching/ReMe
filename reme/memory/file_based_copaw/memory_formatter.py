@@ -230,7 +230,7 @@ class MemoryFormatter:
                 add_time=add_time,
             )
 
-            # Always include current message first, then check threshold
+            # Always include current message first, then check threshold, at least one msg
             formatted_parts.append(formatted_msg)
             total_token_count += msg_token_count
 

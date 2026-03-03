@@ -10,7 +10,7 @@ from agentscope.model import ChatModelBase
 from agentscope.token import HuggingFaceTokenCounter
 from agentscope.tool import Toolkit
 
-from . import MemoryFormatter
+from .memory_formatter import MemoryFormatter
 from .file_io import FileIO
 from ...core.op import BaseOp
 
@@ -42,7 +42,7 @@ class Summarizer(BaseOp):
         if toolkit is not None:
             self.toolkit: Toolkit = toolkit
         else:
-            self.toolkit: Toolkit = Toolkit()
+            self.toolkit = Toolkit()
             file_io = FileIO(working_dir=self.working_dir)
             self.toolkit.register_tool_function(file_io.read)
             self.toolkit.register_tool_function(file_io.write)

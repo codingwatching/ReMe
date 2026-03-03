@@ -14,7 +14,7 @@ from agentscope.tool import Toolkit, ToolResponse
 
 from .config import ReMeConfigParser
 from .core import Application
-from .memory.file_based_copaw import Compactor, Summarizer, ToolResultCompactor
+from .memory.file_based_copaw import Compactor, Summarizer, ToolResultCompactor, CoPawInMemoryMemory
 from .memory.tools import MemorySearch
 
 logger = logging.getLogger(__name__)
@@ -53,9 +53,9 @@ class ReMeCopaw(Application):
         self.token_counter: HuggingFaceTokenCounter = token_counter
         self.toolkit: Toolkit = toolkit
 
-        self.max_input_length: int | None = None
-        self.memory_compact_threshold: int | None = None
-        self.language: str | None = None
+        self.max_input_length: int = 0
+        self.memory_compact_threshold: int = 0
+        self.language: str = ""
 
         self.vector_weight: float = vector_weight
         self.candidate_multiplier: float = candidate_multiplier
@@ -136,7 +136,7 @@ class ReMeCopaw(Application):
         language: str,
     ):
         """update each time"""
-        self.max_input_length: int = max_input_length
+        self.max_input_length = max_input_length
         self.memory_compact_threshold = int(max_input_length * memory_compact_ratio * 0.9)
         if language == "zh":
             self.language = "zh"
@@ -295,6 +295,9 @@ class ReMeCopaw(Application):
                     logger.info(f"Summary task completed: {task_result}")
                     result += f"Summary task completed: {task_result}\n"
 
+                except asyncio.CancelledError:
+                    logger.warning("Summary task was cancelled while waiting.")
+                    result += "Summary task was cancelled.\n"
                 except Exception as e:
                     logger.exception(f"Summary task failed: {e}")
                     result += f"Summary task failed: {e}\n"
@@ -341,7 +344,7 @@ class ReMeCopaw(Application):
         else:
             max_results = 5
 
-        if isinstance(min_score, float):
+        if isinstance(min_score, (int, float)):
             min_score = min(max(min_score, 0.001), 0.999)
         else:
             min_score = 0.1
@@ -365,4 +368,12 @@ class ReMeCopaw(Application):
                     text=search_result,
                 ),
             ],
+        )
+
+    def get_in_memory_memory(self):
+        """Get the in-memory memory."""
+        return CoPawInMemoryMemory(
+            token_counter=self.token_counter,
+            formatter=self.formatter,
+            max_input_length=self.max_input_length,
         )

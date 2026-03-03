@@ -76,14 +76,11 @@ initial_user_message_zh: |
 
   保持每个部分简洁。保留确切的文件路径、函数名称和错误消息。
 
-update_user_message: |
+update_user_message_prefix: |
   The messages above are NEW conversation messages to incorporate into the existing summary provided in
   <previous-summary> tags.
 
-  <previous-summary>
-  {previous_summary}
-  </previous-summary>
-
+update_user_message_suffix: |
   Update the existing structured summary with new information. RULES:
   - PRESERVE all existing information from the previous summary
   - ADD new progress, decisions, and context from the new messages
@@ -121,13 +118,10 @@ update_user_message: |
 
   Keep each section concise. Preserve exact file paths, function names, and error messages.
 
-update_user_message_zh: |
+update_user_message_prefix_zh: |
   上述消息是要整合到现有摘要中的新对话消息，这些消息在<previous-summary>标签中提供。
 
-  <previous-summary>
-  {previous_summary}
-  </previous-summary>
-
+update_user_message_suffix_zh: |
   用新信息更新现有的结构化摘要。规则：
   - 保留来自先前摘要的所有现有信息
   - 从新消息中添加新的进展、决策和上下文
