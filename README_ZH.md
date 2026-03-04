@@ -66,12 +66,9 @@ working_dir/
 | `close`                  | 📕 关闭并清理     | 清理工具结果文件、停止文件监控、保存 Embedding 缓存                                                                          |
 | `compact_memory`         | 📦 压缩历史对话为摘要 | [Compactor](reme/memory/file_based/compactor.py) — ReActAgent 生成结构化上下文检查点                                |
 | `summary_memory`         | 📝 将重要记忆写入文件 | [Summarizer](reme/memory/file_based/summarizer.py) — ReActAgent + 文件工具（read / write / edit）              |
-| `compact_tool_result`    | ✂️ 压缩超长工具输出  | [ToolResultCompactor](reme/memory/file_based/tool_result_compactor.py) — 截断并转存到 `tool_result/`，消息中保留文件引用 |
-| `add_async_summary_task` | ⚡ 提交后台摘要任务   | `asyncio.create_task`，摘要不阻塞主对话流程                                                                         |
-| `await_summary_tasks`    | ⏳ 等待后台任务完成   | 收集所有后台摘要任务的结果，关闭前调用确保写入完成                                                                                |
+| `compact_tool_result`    | ✂️ 压缩超长工具输出  | [ToolResultCompactor](reme/memory/file_based/tool_result_compactor.py) — 截断并转存到 `tool_result/`，消息中保留文件引用 | |
 | `memory_search`          | 🔍 语义搜索记忆    | [MemorySearch](reme/memory/tools/chunk/memory_search.py) — 向量 + BM25 混合检索                                |
 | `get_in_memory_memory`   | 🗂️ 创建会话内存实例 | [ReMeInMemoryMemory](reme/memory/file_based/reme_in_memory_memory.py) — Token 感知的内存管理，支持压缩摘要和状态序列化       |
-| `update_params`          | ⚙️ 动态更新运行时参数 | 运行时调整 `max_input_length`、`memory_compact_ratio`、`language`                                               |
 
 ---
 
