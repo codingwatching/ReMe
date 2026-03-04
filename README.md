@@ -70,13 +70,13 @@ capabilities for AI Agents:
 |--------------------------|------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `start`                  | 🚀 Start memory system             | Initialize file store, file watcher, Embedding cache; clean up expired tool result files                                                                            |
 | `close`                  | 📕 Close and clean up              | Clean tool result files, stop file watcher, save Embedding cache                                                                                                    |
-| `compact_memory`         | 📦 Compact history to summary      | [Compactor](reme/memory/file_based_copaw/compactor.py) — ReActAgent generates structured context checkpoint                                                         |
-| `summary_memory`         | 📝 Write important memory to files | [Summarizer](reme/memory/file_based_copaw/summarizer.py) — ReActAgent + file tools (read / write / edit)                                                            |
-| `compact_tool_result`    | ✂️ Compact oversized tool output   | [ToolResultCompactor](reme/memory/file_based_copaw/tool_result_compactor.py) — Truncate and save to `tool_result/`, keep file reference in message                  |
+| `compact_memory`         | 📦 Compact history to summary      | [Compactor](reme/memory/file_based/compactor.py) — ReActAgent generates structured context checkpoint                                                         |
+| `summary_memory`         | 📝 Write important memory to files | [Summarizer](reme/memory/file_based/summarizer.py) — ReActAgent + file tools (read / write / edit)                                                            |
+| `compact_tool_result`    | ✂️ Compact oversized tool output   | [ToolResultCompactor](reme/memory/file_based/tool_result_compactor.py) — Truncate and save to `tool_result/`, keep file reference in message                  |
 | `add_async_summary_task` | ⚡ Submit background summary task   | `asyncio.create_task`, summary doesn't block main conversation flow                                                                                                 |
 | `await_summary_tasks`    | ⏳ Wait for background tasks        | Collect results from all background summary tasks, call before closing to ensure writes complete                                                                    |
 | `memory_search`          | 🔍 Semantic memory search          | [MemorySearch](reme/memory/tools/chunk/memory_search.py) — Vector + BM25 hybrid retrieval                                                                           |
-| `get_in_memory_memory`   | 🗂️ Create in-memory instance      | [CoPawInMemoryMemory](reme/memory/file_based_copaw/copaw_in_memory_memory.py) — Token-aware memory management, supports compression summary and state serialization |
+| `get_in_memory_memory`   | 🗂️ Create in-memory instance      | [CoPawInMemoryMemory](reme/memory/file_based/copaw_in_memory_memory.py) — Token-aware memory management, supports compression summary and state serialization |
 | `update_params`          | ⚙️ Update runtime parameters       | Adjust `max_input_length`, `memory_compact_ratio`, `language` at runtime                                                                                            |
 
 ---
@@ -434,7 +434,7 @@ graph LR
 
 #### Context Compaction Summary Format
 
-[Compactor](reme/memory/file_based_copaw/compactor.py) uses ReActAgent to compact history into structured **context
+[Compactor](reme/memory/file_based/compactor.py) uses ReActAgent to compact history into structured **context
 checkpoints**:
 
 | Field                 | Description                                      |
@@ -451,7 +451,7 @@ summary, preserving historical progress.
 
 #### Tool Result Compaction
 
-[ToolResultCompactor](reme/memory/file_based_copaw/tool_result_compactor.py) solves context overflow caused by oversized
+[ToolResultCompactor](reme/memory/file_based/tool_result_compactor.py) solves context overflow caused by oversized
 tool outputs:
 
 ```mermaid
@@ -468,7 +468,7 @@ Expired files (exceeding `retention_days`) are automatically cleaned up during `
 
 #### Memory Summary: ReAct + File Tools
 
-[Summarizer](reme/memory/file_based_copaw/summarizer.py) uses the **ReAct + file tools** pattern, letting AI
+[Summarizer](reme/memory/file_based/summarizer.py) uses the **ReAct + file tools** pattern, letting AI
 autonomously decide what to write and where:
 
 ```mermaid
@@ -482,7 +482,7 @@ graph LR
     F -->|No| G[Done]
 ```
 
-[FileIO](reme/memory/file_based_copaw/file_io.py) provides file operation tools:
+[FileIO](reme/memory/file_based/file_io.py) provides file operation tools:
 
 | Tool    | Function                       | Use case                                |
 |---------|--------------------------------|-----------------------------------------|
@@ -492,7 +492,7 @@ graph LR
 
 #### In-Memory Session Management
 
-[CoPawInMemoryMemory](reme/memory/file_based_copaw/copaw_in_memory_memory.py) extends AgentScope's `InMemoryMemory`:
+[CoPawInMemoryMemory](reme/memory/file_based/copaw_in_memory_memory.py) extends AgentScope's `InMemoryMemory`:
 
 | Feature                          | Description                                                         |
 |----------------------------------|---------------------------------------------------------------------|
