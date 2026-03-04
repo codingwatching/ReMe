@@ -3,11 +3,7 @@
 import asyncio
 
 from agentscope.message import Msg
-
-from reme.core.utils import load_env
 from reme.reme_light import ReMeLight
-
-load_env()
 
 
 # ==================== 消息创建辅助函数 ====================

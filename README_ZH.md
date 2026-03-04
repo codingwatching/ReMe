@@ -102,28 +102,12 @@ pip install -U reme-ai[as]
 ```python
 import asyncio
 
-from agentscope.formatter import OpenAIChatFormatter
-from agentscope.model import OpenAIChatModel
-from agentscope.token import HuggingFaceTokenCounter
-from agentscope.tool import Toolkit
-
-from reme.reme_copaw import ReMeCopaw
-
+from agentscope.message import Msg
+from reme.reme_light import ReMeLight
 
 async def main():
-    # 准备 AgentScope 核心组件
-    chat_model = get_model(config={"backend": "openai", "model_name": "qwen3.5-plus"})
-    formatter = ClaudeFormatter()
-    token_counter = HuggingFaceTokenCounter()
-    toolkit = Toolkit()  # 可注册额外工具
-
-    # 初始化 ReMeCopaw
-    reme = ReMeCopaw(
+    reme = ReMeLight(
         working_dir=".reme",  # 记忆文件存储目录
-        chat_model=chat_model,
-        formatter=formatter,
-        token_counter=token_counter,
-        toolkit=toolkit,
         max_input_length=128000,  # 模型上下文窗口（tokens）
         memory_compact_ratio=0.7,  # 达到 max_input_length * 0.7 时触发压缩
         language="zh",  # 摘要语言（zh / ""）
@@ -132,33 +116,58 @@ async def main():
     )
     await reme.start()
 
-    messages = [...]  # list[Msg]，对话历史
+    messages = [...]
 
     # 1. 压缩超长工具输出（防止工具结果撑爆上下文）
+    print("\n" + "-" * 40)
+    print("[步骤 1] 压缩超长工具输出...")
     messages = await reme.compact_tool_result(messages)
+    print(f"处理后消息数量: {len(messages)} 条")
 
     # 2. 将历史对话压缩为结构化摘要（触发时机：上下文接近上限）
+    print("\n" + "-" * 40)
+    print("[步骤 2] 生成结构化压缩摘要...")
     summary = await reme.compact_memory(
         messages=messages,
         previous_summary="",  # 可传入上轮摘要，实现增量更新
     )
-    print(f"压缩摘要:\n{summary}")
+    print(f"压缩摘要:\n{summary[:500]}..." if len(summary) > 500 else f"压缩摘要:\n{summary}")
 
     # 3. 后台异步提交摘要任务（不阻塞对话，摘要写入 memory/YYYY-MM-DD.md）
+    print("\n" + "-" * 40)
+    print("[步骤 3] 提交后台异步摘要任务...")
     reme.add_async_summary_task(messages=messages)
+    print("异步任务已提交")
 
     # 4. 语义搜索记忆（向量 + BM25 混合检索）
+    print("\n" + "-" * 40)
+    print("[步骤 4] 语义搜索记忆...")
     result = await reme.memory_search(query="Python 版本偏好", max_results=5)
     print(f"搜索结果: {result}")
 
-    # 5. 获取会话内存实例（CoPawInMemoryMemory，管理单次对话的上下文）
+    # 5. 获取会话内存实例（ReMeInMemoryMemory，管理单次对话的上下文）
+    print("\n" + "-" * 40)
+    print("[步骤 5] 获取会话内存实例并估算 Token 使用...")
     memory = reme.get_in_memory_memory()
+    # 将消息添加到内存中以便估算
+    for msg in messages:
+        await memory.add(msg)
     token_stats = await memory.estimate_tokens()
     print(f"当前上下文使用率: {token_stats['context_usage_ratio']:.1f}%")
+    print(f"消息 Token 数: {token_stats['messages_tokens']}")
+    print(f"预估总 Token 数: {token_stats['estimated_tokens']}")
 
     # 6. 关闭前等待后台任务完成
-    await reme.await_summary_tasks()
+    print("\n" + "-" * 40)
+    print("[步骤 6] 等待后台任务完成...")
+    summary_result = await reme.await_summary_tasks()
+    print(f"后台摘要任务完成，结果长度: {len(summary_result)} 字符")
+
+    # 关闭 ReMeLight
     await reme.close()
+    print("\n" + "=" * 60)
+    print("ReMeLight 已关闭")
+    print("=" * 60)
 
 
 if __name__ == "__main__":

@@ -31,6 +31,7 @@ from .core import Application
 from .memory.file_based import Compactor, Summarizer, ToolResultCompactor, ReMeInMemoryMemory, ReMeChatFormatter
 from .memory.file_based.utils import get_token_counter
 from .memory.tools import MemorySearch
+from .core.utils import load_env
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +113,8 @@ class ReMeLight(Application):
         self.tool_result_threshold: int = tool_result_threshold
         self.retention_days: int = retention_days
 
+        load_env()
+
         llm_model_name = self._safe_str("LLM_MODEL_NAME", "")
         embedding_model_name = self._safe_str("EMBEDDING_MODEL_NAME", "")
         embedding_dimensions = self._safe_int("EMBEDDING_DIMENSIONS", 1024)
@@ -149,7 +152,7 @@ class ReMeLight(Application):
             embedding_api_key=embedding_api_key,
             embedding_base_url=embedding_base_url,
             working_dir=str(self.working_path),
-            config_path="copaw",
+            config_path="light",
             enable_logo=False,
             log_to_console=False,
             parser=ReMeConfigParser,
