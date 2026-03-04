@@ -242,7 +242,7 @@ from reme.reme_copaw import ReMeCopaw
 
 async def main():
     # Prepare AgentScope core components
-    chat_model = get_model(config={"backend": "openai", "model_name": "qwen-plus"})
+    chat_model = get_model(config={"backend": "openai", "model_name": "qwen3.5-plus"})
     formatter = ClaudeFormatter()
     token_counter = HuggingFaceTokenCounter()
     toolkit = Toolkit()  # Can register additional tools
@@ -308,7 +308,7 @@ async def main():
         working_dir=".reme",
         default_llm_config={
             "backend": "openai",
-            "model_name": "qwen3-30b-a3b-thinking-2507",
+            "model_name": "qwen3.5-plus",
         },
         default_embedding_model_config={
             "backend": "openai",
