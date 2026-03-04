@@ -77,7 +77,7 @@ working_dir/
 #### 安装
 
 ```bash
-pip install -U reme-ai[as]
+pip install -U reme-ai[light]
 ```
 
 #### 环境变量
